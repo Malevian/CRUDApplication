@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="/style.css" />
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css"
+    />
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <title>CRUD Application</title>
+  </head>
+  <body>
+    <header id="headerContent" style="display: none">
+      <div id="authStatus">
+        <span id="welcomeMessage"></span>
+        <button id="logoutButton" style="display: none">Logout</button>
+      </div>
+    </header>
+
+    <div id="loginModal" class="modal">
+      <div class="modal-content">
+        <h2>Login</h2>
+        <form id="loginForm">
+          <input
+            type="text"
+            id="usernameLogin"
+            placeholder="Username"
+            required
+          />
+          <input
+            type="password"
+            id="passwordLogin"
+            placeholder="Password"
+            required
+          />
+          <button type="submit">Login</button>
+        </form>
+      </div>
+    </div>
+
+    <div id="mainContent" style="display: none">
+      <h1>Welcome to the User Management System</h1>
+
+      <div class="createUserDiv" style="margin-bottom: 20px">
+        <button id="createUserButton">Create User</button>
+      </div>
+
+      <div class="exportToExcelDiv" style="margin-bottom: 20px">
+        <button id="exportToExcelButton">Export to Excel</button>
+      </div>
+
+      <div id="createUserModal" class="modal" style="display: none">
+        <div class="modal-content">
+          <span class="close" onclick="closeCreateModal()">&times;</span>
+          <h2>Create User</h2>
+          <form id="createUserForm">
+            <input type="text" id="username" placeholder="Username" required />
+            <input type="text" id="name" placeholder="Name" required />
+            <input type="email" id="email" placeholder="Email" required />
+            <input type="phone" id="phone" placeholder="Phone" required />
+            <input type="text" id="dob" placeholder="Date of Birth" required />
+            <input
+              type="password"
+              id="password"
+              placeholder="Password"
+              required
+            />
+            <input
+              type="password"
+              id="confirmPassword"
+              placeholder="Confirm Password"
+              required
+            />
+            <button type="submit">Create User</button>
+          </form>
+        </div>
+      </div>
+
+      <div id="updateUserModal" class="modal" style="display: none">
+        <div class="modal-content">
+          <span class="close" onclick="closeUpdateModal()">&times;</span>
+          <h2>Update User</h2>
+          <form id="updateUserForm">
+            <input type="hidden" id="updateUserId" />
+            <input
+              type="text"
+              id="updateUsername"
+              placeholder="Username"
+              required
+            />
+            <input type="text" id="updateName" placeholder="Name" required />
+            <input type="email" id="updateEmail" placeholder="Email" required />
+            <input type="hidden" id="updatePassword" />
+            <button type="submit">Update User</button>
+          </form>
+        </div>
+      </div>
+
+      <div id="verifyEmailModal" class="modal" style="display: none">
+        <div class="modal-content">
+          <span class="close" onclick="closeVerifyEmailModal()">&times;</span>
+          <h2>Verify Email</h2>
+          <form id="verifyEmailForm">
+            <input type="hidden" id="verifyEmailUserId" />
+            <input
+              type="text"
+              id="verifyEmailCode"
+              placeholder="Verification Code"
+              required
+            />
+            <button type="submit">Verify Email</button>
+          </form>
+        </div>
+      </div>
+
+      <div class="userListDiv">
+        <div id="userList">
+          <h2>All Users</h2>
+          <input type="text" id="searchValue" placeholder="Search" />
+          <div class="searchByDateDiv" style="margin-bottom: 20px">
+            <input
+              type="text"
+              id="dateFrom"
+              placeholder="Select 'Start date'"
+            />
+            <input type="text" id="dateTo" placeholder="Select 'End date'" />
+          </div>
+          <table id="userTable" border="1" cellpadding="10">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Username</th>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Phone</th>
+                <th>Date of birth</th>
+                <th>Role</th>
+                <th>Last login</th>
+                <th>Created at</th>
+                <th class="actions">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <!-- info -->
+            </tbody>
+          </table>
+          <div id="pagination" class="pagination"></div>
+          <button id="deleteSelectedUsersButton">Delete Selected Users</button>
+        </div>
+      </div>
+    </div>
+
+    <script src="/script.js"></script>
+  </body>
+</html>

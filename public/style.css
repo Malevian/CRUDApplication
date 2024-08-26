@@ -1,0 +1,154 @@
+body {
+  font-family: Arial, sans-serif;
+  padding: 20px;
+}
+
+h1 {
+  color: #333;
+}
+
+form {
+  margin-bottom: 20px;
+}
+
+input[type="text"],
+input[type="email"] {
+  padding: 5px;
+  margin-right: 10px;
+}
+
+button {
+  padding: 5px 10px;
+  background-color: #28a745;
+  color: #fff;
+  border: none;
+  cursor: pointer;
+}
+
+button:hover {
+  background-color: #218838;
+}
+
+ul {
+  list-style-type: none;
+  padding: 0;
+}
+
+li,
+#searchValue {
+  margin-bottom: 10px;
+}
+
+a {
+  color: #007bff;
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+#userList table td a {
+  text-decoration: none;
+  color: #000;
+}
+
+.delete-form {
+  margin: 0;
+}
+
+.modal {
+  display: block;
+  position: fixed;
+  z-index: 1;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+}
+
+.modal-content {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background-color: #fefefe;
+  padding: 20px;
+  border: 1px solid #888;
+  width: 80%;
+  max-width: 400px;
+  max-height: 90vh;
+  overflow: hidden;
+}
+
+.modal-content input {
+  margin-bottom: 15px;
+  padding: 10px;
+  font-size: 16px;
+  width: 90%;
+}
+
+.modal-content .close {
+  position: absolute;
+  top: 10px;
+  right: 15px;
+  font-size: 24px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+th {
+  background-color: aquamarine;
+}
+
+td {
+  text-align: center;
+}
+
+table {
+  border-collapse: collapse;
+}
+
+header {
+  background-color: #f4f4f4;
+  padding: 10px;
+  border-bottom: 1px solid #ddd;
+}
+
+#headerContent {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+}
+
+#authStatus {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+#welcomeMessage {
+  margin-right: 10px;
+}
+
+.pagination,
+#deleteSelectedUsersButton {
+  margin-top: 10px;
+}
+
+.pagination-btn {
+  padding: 5px 10px;
+  cursor: pointer;
+}
+
+.pagination-btn.active {
+  background-color: #007bff;
+  color: white;
+}
+
+.search-select,
+.search-input {
+  width: 100%;
+  box-sizing: border-box;
+}
