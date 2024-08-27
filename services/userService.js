@@ -169,9 +169,9 @@ async function searchUsers({
 
     if (value) {
       where[sequelize.Op.or] = {
-        username: { [sequelize.Op.like]: `%${value}%` },
-        email: { [sequelize.Op.like]: `%${value}%` },
-        phone: { [sequelize.Op.like]: `%${value}%` },
+        username: { [sequelize.Op.iLike]: `%${value}%` },
+        email: { [sequelize.Op.iLike]: `%${value}%` },
+        phone: { [sequelize.Op.iLike]: `%${value}%` },
       };
     }
 
@@ -319,9 +319,9 @@ function countAllSearchedUsers({ value, startDate, endDate }) {
 
   if (value) {
     where[sequelize.Op.or] = {
-      username: { [sequelize.Op.like]: `%${value}%` },
-      email: { [sequelize.Op.like]: `%${value}%` },
-      phone: { [sequelize.Op.like]: `%${value}%` },
+      username: { [sequelize.Op.iLike]: `%${value}%` },
+      email: { [sequelize.Op.iLike]: `%${value}%` },
+      phone: { [sequelize.Op.iLike]: `%${value}%` },
     };
   }
 
@@ -338,6 +338,16 @@ function countAllSearchedUsers({ value, startDate, endDate }) {
 
 async function deleteInList(ids) {
   try {
+    const admins = await User.findAll({
+      where: {
+        id: { [sequelize.Op.in]: ids },
+        role: "admin",
+      },
+    });
+
+    if (admins.length > 0) {
+      return { success: false, message: "The list contains admin(s)" };
+    }
     const deletedCount = await User.destroy({
       where: { id: { [sequelize.Op.in]: ids } },
     });
@@ -456,8 +466,9 @@ function searchConditionToSearchUsers(value, startDate, endDate) {
     if (value) {
       where[sequelize.Op.or] = {
         username: { [sequelize.Op.like]: `%${value}%` },
-        email: { [sequelize.Op.like]: `%${value}%` },
-        phone: { [sequelize.Op.like]: `%${value}%` },
+        name: { [sequelize.Op.iLike]: `%${value}%` },
+        email: { [sequelize.Op.iLike]: `%${value}%` },
+        phone: { [sequelize.Op.iLike]: `%${value}%` },
       };
     }
 

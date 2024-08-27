@@ -100,6 +100,8 @@ a:hover {
 
 th {
   background-color: aquamarine;
+  position: relative;
+  padding: 10px;
 }
 
 td {
@@ -147,8 +149,44 @@ header {
   color: white;
 }
 
-.search-select,
 .search-input {
   width: 100%;
   box-sizing: border-box;
+}
+
+.table-title {
+  display: block;
+  font-weight: bold;
+}
+
+.search-select {
+  display: none;
+  position: absolute;
+  top: 100%;
+  left: 0;
+  width: 100%;
+  z-index: 1000;
+  padding: 5px;
+}
+
+.search-select option {
+  padding: 5px;
+}
+
+th:hover .search-select {
+  display: block;
+}
+
+#userTable input[type="text"],
+#userTable input[type="number"] {
+  width: 100%;
+  height: 100%;
+  box-sizing: border-box;
+  border: none;
+  padding: 5px;
+  font-size: 16px;
+}
+
+.search-row td {
+  padding: 0;
 }

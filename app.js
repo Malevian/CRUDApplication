@@ -89,90 +89,37 @@ app.get("/users", authenticateToken, async (req, res) => {
     } = req.query;
     const page = parseInt(req.query.page) || 1;
 
-    console.log(req.query);
-
     const limit = 10;
     const offset = (page - 1) * limit;
 
     let searchCondition = {};
 
-    if (
-      value ||
-      dateFrom ||
-      dateTo ||
-      (id && (id !== ":" || !id.includes("chooseAnOption:"))) ||
-      (username &&
-        (username !== ":" || !username.includes("chooseAnOption:"))) ||
-      (name && (name !== ":" || !name.includes("chooseAnOption:"))) ||
-      (email && (email !== ":" || !email.includes("chooseAnOption:"))) ||
-      (phone && (phone !== ":" || !phone.includes("chooseAnOption:"))) ||
-      (dob && (dob !== ":" || !dob.includes("chooseAnOption:"))) ||
-      (role && !role.includes("chooseAnOption")) ||
-      (lastLogin &&
-        (lastLogin !== ":" || !lastLogin.includes("chooseAnOption:"))) ||
-      (createdAt &&
-        (createdAt !== ":" || !createdAt.includes("chooseAnOption:")))
-    ) {
-      if (value || dateFrom || dateTo) {
-        searchCondition = searchConditionToSearchUsers(value, dateFrom, dateTo);
+    const addCondition = (key, value, formatter) => {
+      if (value) {
+        searchCondition[key] = formatter(value);
       }
+    };
 
-      if (id && id !== ":" && !id.includes("chooseAnOption:")) {
-        searchCondition.id = searchConditionForId(id);
-      }
-
-      if (
-        username &&
-        username !== ":" &&
-        !username.includes("chooseAnOption:")
-      ) {
-        searchCondition.username = searchConditionForUsername(username);
-      }
-
-      if (name && name !== ":" && !name.includes("chooseAnOption:")) {
-        searchCondition.name = searchConditionForName(name);
-      }
-
-      if (email && email !== ":" && !email.includes("chooseAnOption:")) {
-        searchCondition.email = searchConditionForEmail(email);
-      }
-
-      if (phone && phone !== ":" && !phone.includes("chooseAnOption:")) {
-        searchCondition.phone = searchConditionForPhone(phone);
-      }
-
-      if (dob && dob !== ":" && !dob.includes("chooseAnOption:")) {
-        searchCondition.date_of_birth = searchConditionForDob(dob);
-      }
-
-      if (role && !role.includes("chooseAnOption")) {
-        searchCondition.role = searchConditionForRole(role);
-      }
-
-      if (
-        lastLogin &&
-        lastLogin !== ":" &&
-        !lastLogin.includes("chooseAnOption:")
-      ) {
-        searchCondition.last_login = searchConditionForLastLogin(lastLogin);
-      }
-
-      if (
-        createdAt &&
-        createdAt !== ":" &&
-        !createdAt.includes("chooseAnOption:")
-      ) {
-        searchCondition.created_at = searchConditionForCreatedAt(createdAt);
-      }
+    if (value || dateFrom || dateTo) {
+      Object.assign(
+        searchCondition,
+        searchConditionToSearchUsers(value, dateFrom, dateTo)
+      );
     }
 
-    console.log(searchCondition);
+    addCondition("id", id, searchConditionForId);
+    addCondition("username", username, searchConditionForUsername);
+    addCondition("name", name, searchConditionForName);
+    addCondition("email", email, searchConditionForEmail);
+    addCondition("phone", phone, searchConditionForPhone);
+    addCondition("date_of_birth", dob, searchConditionForDob);
+    addCondition("role", role, searchConditionForRole);
+    addCondition("last_login", lastLogin, searchConditionForLastLogin);
+    addCondition("created_at", createdAt, searchConditionForCreatedAt);
 
     const allUsersCounter = await countAllUsersWithCriteria(searchCondition);
     let users = await getAllUsersWithCriteria(limit, offset, searchCondition);
-    console.log("All users counter: " + allUsersCounter);
-    console.log(searchCondition);
-    console.log(users);
+
     users = users.map((user) => ({
       ...user.toJSON(),
       created_at: formatDateWithTime(user.created_at),
@@ -221,9 +168,17 @@ app.post(
 // Update user
 app.post("/users/update/:id", authenticateToken, async (req, res) => {
   const { id } = req.params;
-  const { username, password, name, email } = req.body;
+  const { username, password, name, email, phone, dob } = req.body;
+
   try {
-    const result = await updateUser(id, { username, password, name, email });
+    const result = await updateUser(id, {
+      username,
+      password,
+      name,
+      email,
+      phone,
+      dob,
+    });
     if (result.success) {
       res.status(201).json({ success: true, user: result.user });
     } else {
@@ -244,9 +199,9 @@ app.post(
     try {
       const result = await deleteUserById(id);
       if (result.success) {
-        res.status(201).json({ success: true, message: "User deleted" });
+        res.status(200).json(result);
       } else {
-        res.status(400).json({ success: false, message: result.message });
+        res.status(400).json(result);
       }
     } catch (error) {
       res.status(500).send({ success: false, message: "Error deleting user" });
@@ -300,8 +255,8 @@ app.get("/check-auth", authenticateToken, async (req, res) => {
 });
 
 // Logout
-app.post("/logout", (req, res) => {
-  res.json({ success: true, message: "Logged out" });
+app.post("/logout", authenticateToken, (req, res) => {
+  res.status(200).json({ success: true, message: "Logged out" });
 });
 
 app.get("/users/export-users", authenticateToken, async (req, res) => {

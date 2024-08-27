@@ -10,6 +10,7 @@
     />
     <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
     <title>CRUD Application</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
   </head>
   <body>
     <header id="headerContent" style="display: none">
@@ -84,14 +85,26 @@
           <h2>Update User</h2>
           <form id="updateUserForm">
             <input type="hidden" id="updateUserId" />
+            <label>Username</label>
             <input
               type="text"
               id="updateUsername"
               placeholder="Username"
               required
             />
+            <label>Name</label>
             <input type="text" id="updateName" placeholder="Name" required />
+            <label>Email</label>
             <input type="email" id="updateEmail" placeholder="Email" required />
+            <label>Phone</label>
+            <input type="phone" id="updatePhone" placeholder="Phone" required />
+            <label>Date of Birth</label>
+            <input
+              type="text"
+              id="updateDob"
+              placeholder="Date of Birth"
+              required
+            />
             <input type="hidden" id="updatePassword" />
             <button type="submit">Update User</button>
           </form>
@@ -130,15 +143,84 @@
           <table id="userTable" border="1" cellpadding="10">
             <thead>
               <tr>
-                <th>ID</th>
-                <th>Username</th>
-                <th>Name</th>
-                <th>Email</th>
-                <th>Phone</th>
-                <th>Date of birth</th>
-                <th>Role</th>
-                <th>Last login</th>
-                <th>Created at</th>
+                <th>
+                  <span class="table-title">ID</span>
+                  <select id="idSearchOption" class="search-select">
+                    <option value="chooseAnOption">Choose an option</option>
+                    <option value="greaterOrEquals">
+                      Greater than or equal
+                    </option>
+                    <option value="lessOrEquals">Less than or equal</option>
+                  </select>
+                </th>
+                <th>
+                  <span class="table-title">Username</span>
+                  <select id="usernameSearchOption" class="search-select">
+                    <option value="chooseAnOption">Choose an option</option>
+                    <option value="startsWith">Starts with</option>
+                    <option value="endsWith">Ends with</option>
+                    <option value="contains">Contains</option>
+                  </select>
+                </th>
+                <th>
+                  <span class="table-title">Name</span>
+                  <select id="nameSearchOption" class="search-select">
+                    <option value="chooseAnOption">Choose an option</option>
+                    <option value="startsWith">Starts with</option>
+                    <option value="endsWith">Ends with</option>
+                    <option value="contains">Contains</option>
+                  </select>
+                </th>
+                <th>
+                  <span class="table-title">Email</span>
+                  <select id="emailSearchOption" class="search-select">
+                    <option value="chooseAnOption">Choose an option</option>
+                    <option value="startsWith">Starts with</option>
+                    <option value="endsWith">Ends with</option>
+                    <option value="contains">Contains</option>
+                  </select>
+                </th>
+                <th>
+                  <span class="table-title">Phone</span>
+                  <select id="phoneSearchOption" class="search-select">
+                    <option value="chooseAnOption">Choose an option</option>
+                    <option value="startsWith">Starts with</option>
+                    <option value="endsWith">Ends with</option>
+                    <option value="contains">Contains</option>
+                  </select>
+                </th>
+                <th>
+                  <span class="table-title">Date of Birth</span>
+                  <select id="dobSearchOption" class="search-select">
+                    <option value="chooseAnOption">Choose an option</option>
+                    <option value="startsFrom">Starts from</option>
+                    <option value="endsTo">Ends to</option>
+                  </select>
+                </th>
+                <th>
+                  <span class="table-title">Role</span>
+                  <select id="roleSearchOption" class="search-select">
+                    <option value="chooseAnOption">Choose an option</option>
+                    <option value="user">User</option>
+                    <option value="admin">Admin</option>
+                  </select>
+                </th>
+                <th>
+                  <span class="table-title">Last Login</span>
+                  <select id="lastLoginSearchOption" class="search-select">
+                    <option value="chooseAnOption">Choose an option</option>
+                    <option value="startsFrom">Starts from</option>
+                    <option value="endsTo">Ends to</option>
+                  </select>
+                </th>
+                <th>
+                  <span class="table-title">Created At</span>
+                  <select id="createdAtSearchOption" class="search-select">
+                    <option value="chooseAnOption">Choose an option</option>
+                    <option value="startsFrom">Starts from</option>
+                    <option value="endsTo">Ends to</option>
+                  </select>
+                </th>
                 <th class="actions">Actions</th>
               </tr>
             </thead>
