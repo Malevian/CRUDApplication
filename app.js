@@ -26,6 +26,7 @@ const {
   searchConditionToSearchUsers,
   countAllUsersWithCriteria,
   getAllUsersWithCriteria,
+  registerUser,
 } = require("./services/userService");
 const { formatDate, formatDateWithTime } = require("./utilities/dateUtils");
 const sequelize = require("./database");
@@ -95,7 +96,7 @@ app.get("/users", authenticateToken, async (req, res) => {
     let searchCondition = {};
 
     const addCondition = (key, value, formatter) => {
-      if (value) {
+      if (value && formatter(value)) {
         searchCondition[key] = formatter(value);
       }
     };
@@ -210,7 +211,22 @@ app.post(
 );
 
 // Verify email
-app.post("/users/verify-email/", authenticateToken, async (req, res) => {
+// app.post("/users/verify-email/", authenticateToken, async (req, res) => {
+//   const { code } = req.body;
+//   try {
+//     const result = await verifyEmail(code);
+//     if (result.success) {
+//       res.status(201).json({ success: true, message: result.message });
+//     } else {
+//       res.status(400).json({ success: false, message: result.message });
+//     }
+//   } catch (error) {
+//     console.log(error);
+//     res.status(500).json({ success: false, message: "Error verifying email" });
+//   }
+// });
+
+app.post("/verify-email/", async (req, res) => {
   const { code } = req.body;
   try {
     const result = await verifyEmail(code);
@@ -252,6 +268,24 @@ app.get("/check-auth", authenticateToken, async (req, res) => {
     username: req.user.username,
     role: req.user.role,
   });
+});
+
+// Register
+app.post("/register", async (req, res) => {
+  const { username, password, name, email, phone, dob } = req.body;
+  const result = await registerUser(
+    username,
+    password,
+    name,
+    email,
+    phone,
+    dob
+  );
+  if (result.success) {
+    res.status(201).json({ success: true, user: result.user });
+  } else {
+    res.status(400).json({ success: false, message: result.message });
+  }
 });
 
 // Logout
