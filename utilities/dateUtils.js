@@ -5,7 +5,7 @@ function formatDate(date) {
   const month = String(date.getMonth() + 1).padStart(2, "0");
   const year = date.getFullYear();
 
-  return `${day}/${month}/${year}`;
+  return `${day}-${month}-${year}`;
 }
 
 function formatDateWithTime(date) {
@@ -22,4 +22,9 @@ function formatDateWithTime(date) {
   return `${year}/${month}/${day} ${hours}:${minutes}:${seconds}`;
 }
 
-module.exports = { formatDate, formatDateWithTime };
+function convertToYYYYMMDD(date) {
+  const [year, month, day] = date.split("/");
+  return `${year}-${month}-${day}`;
+}
+
+module.exports = { formatDate, formatDateWithTime, convertToYYYYMMDD };

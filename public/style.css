@@ -39,18 +39,12 @@ li,
   margin-bottom: 10px;
 }
 
-a {
-  color: #007bff;
-  text-decoration: none;
-}
-
 a:hover {
   text-decoration: underline;
 }
 
 #userList table td a {
   text-decoration: none;
-  color: #000;
 }
 
 .delete-form {
@@ -60,7 +54,7 @@ a:hover {
 .modal {
   display: block;
   position: fixed;
-  z-index: 1;
+  z-index: 1000;
   left: 0;
   top: 0;
   width: 100%;
@@ -109,7 +103,8 @@ td {
 }
 
 table {
-  border-collapse: collapse;
+  border-collapse: separate;
+  border-spacing: 0;
 }
 
 header {
@@ -159,22 +154,17 @@ header {
   font-weight: bold;
 }
 
-.search-select {
-  display: none;
-  position: absolute;
-  top: 100%;
-  left: 0;
-  width: 100%;
-  z-index: 1000;
+th .search-select {
+  background: transparent;
+  border: none;
+  width: 20px;
+  z-index: 2;
   padding: 5px;
+  box-sizing: border-box;
 }
 
 .search-select option {
   padding: 5px;
-}
-
-th:hover .search-select {
-  display: block;
 }
 
 #userTable input[type="text"],
@@ -187,6 +177,133 @@ th:hover .search-select {
   font-size: 16px;
 }
 
+#userTable input[type="checkbox"] {
+  transform: scale(2);
+}
+
 .search-row td {
   padding: 0;
+}
+
+.table-container {
+  overflow-x: auto;
+  width: 100%;
+}
+
+.sticky-col {
+  position: sticky;
+  left: 0;
+  z-index: 3;
+}
+
+.sticky-col + .sticky-col {
+  left: 39px;
+  z-index: 3;
+}
+
+.sticky-col select {
+  z-index: 4;
+}
+
+/*Themes*/
+.light-theme,
+.dark-theme {
+  transition: background-color 0.5s ease, color 0.5s ease;
+}
+
+/* Light theme */
+
+body.light-theme,
+header.light-theme {
+  background-color: #fff;
+  color: #333;
+}
+
+table.light-theme {
+  background-color: #fff;
+  color: #333;
+}
+
+button.light-theme {
+  background-color: #28a745;
+  color: #fff;
+}
+
+#welcomeMessage.light-theme,
+.modal-content.light-theme,
+h1.light-theme,
+a.light-theme,
+input.light-theme,
+h2.light-theme,
+label.light-theme,
+.sticky-col.light-theme {
+  background-color: #fff;
+  color: #333;
+}
+
+th.light-theme,
+th.sticky-col.light-theme {
+  background-color: aquamarine;
+  color: #333;
+}
+/* End light theme */
+
+/* Dark theme */
+
+.dark-theme {
+  color: #fff;
+}
+
+body.dark-theme,
+header.dark-theme {
+  background-color: #222;
+}
+
+table.dark-theme {
+  background-color: #222;
+}
+
+button.dark-theme {
+  background-color: #2d55d7;
+}
+
+#welcomeMessage.dark-theme,
+.modal-content.dark-theme,
+h1.dark-theme,
+a.dark-theme,
+input.dark-theme,
+h2.dark-theme,
+label.dark-theme,
+.sticky-col.dark-theme {
+  background-color: #222;
+}
+
+th.dark-theme,
+th.sticky-col.dark-theme {
+  background-color: #005f4f;
+}
+/*End dark theme*/
+
+button:disabled {
+  background-color: gray;
+  color: white;
+  cursor: not-allowed;
+}
+
+.th-container {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.table-title {
+  text-align: center;
+  flex: 1;
+  margin-right: 5px;
+}
+
+#userTable input {
+  border: 1px solid black;
+  padding: 0;
+  margin: 0;
 }

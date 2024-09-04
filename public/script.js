@@ -47,6 +47,53 @@ $(document).ready(async function () {
   });
   //end login
 
+  //register
+  $("#registerForm").submit(async function (event) {
+    event.preventDefault();
+    const username = $("#usernameRegister").val();
+    const name = $("#nameRegister").val();
+    const email = $("#emailRegister").val();
+    const phone = $("#phoneRegister").val();
+    const dob = $("#dobRegister").val();
+    const password = $("#passwordRegister").val();
+    const confirmPassword = $("#confirmPasswordRegister").val();
+
+    const regex =
+      /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+
+    if (!regex.test(password)) {
+      alert(
+        "Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character"
+      );
+      return;
+    }
+
+    if (password !== confirmPassword) {
+      alert("Passwords do not match");
+      return;
+    }
+
+    try {
+      const response = await $.ajax({
+        url: "/register",
+        method: "POST",
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded",
+        },
+        data: $.param({ username, password, name, email, phone, dob }),
+      });
+
+      $("#registerForm").trigger("reset");
+
+      closeRegisterModal();
+      $("#verifyEmailModal").show();
+      $("#verifyEmailUserId").value = response.user.id;
+    } catch (error) {
+      console.error("Error registering user", error);
+    }
+  });
+  //end register
+
   //logout
   $("#logoutButton").click(async function () {
     try {
@@ -59,6 +106,8 @@ $(document).ready(async function () {
       });
 
       localStorage.removeItem("token");
+      localStorage.setItem("theme", "light");
+      applyTheme();
 
       $("#headerContent").hide();
       $("#welcomeMessage").text("");
@@ -167,11 +216,10 @@ $(document).ready(async function () {
 
     try {
       await $.ajax({
-        url: `/users/verify-email/`,
+        url: `/verify-email/`,
         method: "POST",
         headers: {
           "Content-Type": "application/x-www-form-urlencoded",
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
         },
         data: $.param({ code }),
       });
@@ -179,7 +227,7 @@ $(document).ready(async function () {
       alert("Email verified successfully");
       $("#verifyEmailCode").val("");
       closeVerifyEmailModal();
-      loadUsers();
+      $("#loginModal").show();
     } catch (error) {
       console.error("Error verifying email", error);
     }
@@ -242,43 +290,10 @@ $(document).ready(async function () {
   //end delete selected users
 
   //date pickers
-  flatpickr("#dateFrom", {
-    dateFormat: "d/m/Y",
-    enableTime: false,
-    minDate: "01/01/1860", //based on max person ever lived
-    maxDate: "today",
-    onChange: function (selectedDates) {
-      if (selectedDates.length > 0) {
-        const startDate = selectedDates[0];
-        $("#dateFrom").val(startDate.toISOString().split("T")[0]);
-      }
-    },
-  });
-
-  flatpickr("#dateTo", {
-    dateFormat: "d/m/Y",
-    enableTime: false,
-    minDate: "01/01/1860", //based on max person ever lived,
-    maxDate: "today",
-    onChange: function (selectedDates) {
-      if (selectedDates.length > 0) {
-        const endDate = selectedDates[0];
-        $("#dateTo").val(endDate.toISOString().split("T")[0]);
-      }
-    },
-  });
-
-  flatpickr("#dob", {
-    dateFormat: "d/m/Y",
-    minDate: "01/01/1860", //based on max person ever lived,
-    maxDate: "today",
-    onChange: function (selectedDates) {
-      if (selectedDates.length > 0) {
-        const dob = selectedDates[0];
-        $("#dob").val(dob.toISOString().split("T")[0]);
-      }
-    },
-  });
+  initializeDatePicker("#dateFrom");
+  initializeDatePicker("#dateTo");
+  initializeDatePicker("#dob");
+  initializeDatePicker("#dobRegister");
   //end date pickers
 });
 
@@ -319,7 +334,9 @@ async function loadUsers(page = 1) {
     users.forEach((user) => {
       $tableBody.append(`
             <tr id="user-${user.id}">
-              <td><a href="#" class="updateUserButton" data-user-id="${user.id}"
+              <td class="sticky-col"><a href="#" class="updateUserButton" data-user-id="${
+                user.id
+              }"
                                                        data-username="${
                                                          user.username
                                                        }"
@@ -336,7 +353,7 @@ async function loadUsers(page = 1) {
                                                        data-dob="${
                                                          user.date_of_birth
                                                        }">${user.id}</a></td>
-              <td>${user.username}</td>
+              <td class="sticky-col">${user.username}</td>
               <td>${user.name}</td>
               <td>${user.email}</td>
               <td>${user.phone}</td>
@@ -346,10 +363,10 @@ async function loadUsers(page = 1) {
               <td>${user.created_at}</td>
               <td class="actions">
                 <button onclick="deleteUser(${user.id})">Delete</button>
-                <input type="checkbox" id="active-${user.id}" ${
-        user.active ? "checked" : ""
-      }>
               </td>
+              <td class="select"><input type="checkbox" id="active-${
+                user.id
+              }" ${user.active ? "checked" : ""}></td>
             </tr>`);
     });
 
@@ -357,15 +374,19 @@ async function loadUsers(page = 1) {
     if (!$thead.find("tr.search-row").length) {
       const interaction = `
               <tr class="search-row">
-                <td><input type="number" id="idSearchValue" class="search-input" /></td>
-                <td><input type="text" id="usernameSearchValue" class="search-input" /></td>
+                <td class="sticky-col"><input type="number" id="idSearchValue" class="search-input" /></td>
+                <td class="sticky-col"><input type="text" id="usernameSearchValue" class="search-input" /></td>
                 <td><input type="text" id="nameSearchValue" class="search-input" /></td>
                 <td><input type="text" id="emailSearchValue" class="search-input" /></td>
                 <td><input type="text" id="phoneSearchValue" class="search-input" /></td>
-                <td><input type="text" id="dobSearchValue" class="search-input" /></td>
+                <td><input type="text" id="dobSearchValue" class="search-input" />
+                <input type="text" id="dobSearchValue2" class="search-input" style="display: none" /></td>
                 <td></td>
-                <td><input type="text" id="lastLoginSearchValue" class="search-input" /></td>
-                <td><input type="text" id="createdAtSearchValue" class="search-input" /></td>
+                <td><input type="text" id="lastLoginSearchValue" class="search-input" />
+                <input type="text" id="lastLoginSearchValue2" class="search-input" style="display: none" /></td>
+                <td><input type="text" id="createdAtSearchValue" class="search-input" />
+                <input type="text" id="createdAtSearchValue2" class="search-input" style="display: none" /></td>
+                <td></td>
                 <td></td>
               </tr>`;
 
@@ -378,8 +399,11 @@ async function loadUsers(page = 1) {
         "emailSearchValue",
         "phoneSearchValue",
         "dobSearchValue",
+        "dobSearchValue2",
         "lastLoginSearchValue",
+        "lastLoginSearchValue2",
         "createdAtSearchValue",
+        "createdAtSearchValue2",
       ];
 
       const searchOptions = [
@@ -407,46 +431,24 @@ async function loadUsers(page = 1) {
         const $select = $(`#${id}`);
         if ($select.length) {
           $select.on("change", function () {
+            const idPrefix = id.split("SearchOption")[0];
+            const $secondaryInput = $(`#${idPrefix}SearchValue2`);
+            if ($select.val() === "between") {
+              $secondaryInput.show();
+            } else {
+              $secondaryInput.hide();
+            }
             loadUsers();
           });
         }
       });
 
-      flatpickr("#dobSearchValue", {
-        dateFormat: "d/m/Y",
-        minDate: "01/01/1860", //based on max person ever lived,
-        maxDate: "today",
-        onChange: function (selectedDates) {
-          if (selectedDates.length > 0) {
-            const dob = selectedDates[0];
-            $("#dobSearchValue").val(dob.toISOString().split("T")[0]);
-          }
-        },
-      });
-
-      flatpickr("#lastLoginSearchValue", {
-        dateFormat: "d/m/Y",
-        minDate: "01/01/1860", //based on max person ever lived,
-        maxDate: "today",
-        onChange: function (selectedDates) {
-          if (selectedDates.length > 0) {
-            const dob = selectedDates[0];
-            $("#lastLoginSearchValue").val(dob.toISOString().split("T")[0]);
-          }
-        },
-      });
-
-      flatpickr("#createdAtSearchValue", {
-        dateFormat: "d/m/Y",
-        minDate: "01/01/1860", //based on max person ever lived,
-        maxDate: "today",
-        onChange: function (selectedDates) {
-          if (selectedDates.length > 0) {
-            const dob = selectedDates[0];
-            $("#createdAtSearchValue").val(dob.toISOString().split("T")[0]);
-          }
-        },
-      });
+      initializeDatePicker("#dobSearchValue");
+      initializeDatePicker("#dobSearchValue2");
+      initializeDatePicker("#lastLoginSearchValue");
+      initializeDatePicker("#lastLoginSearchValue2");
+      initializeDatePicker("#createdAtSearchValue");
+      initializeDatePicker("#createdAtSearchValue2");
     }
 
     adjustUIBasedOnUserRole(user.role, user.id);
@@ -454,6 +456,7 @@ async function loadUsers(page = 1) {
     $("#userListDiv").show();
 
     renderPagination(result.totalPages, page);
+    applyTheme(localStorage.getItem("theme"));
   } catch (error) {
     console.error("Error loading users", error);
   }
@@ -486,6 +489,7 @@ async function deleteUser(id) {
 
 //populate update form
 function populateUpdateForm(
+  curUserId,
   userId,
   username,
   password,
@@ -501,6 +505,15 @@ function populateUpdateForm(
   $("#updatePhone").val(phone);
   $("#updateDob").val(dob);
   $("#updatePassword").val(password);
+
+  if (curUserId === userId) {
+    $("#updatePasswordLabel").show();
+    $("#updatePassword").attr("type", "password");
+  } else {
+    $("#updatePasswordLabel").hide();
+    $("#updatePassword").attr("type", "hidden");
+  }
+
   $("#updateUserModal").show();
 }
 //end populate update form
@@ -517,6 +530,10 @@ function closeUpdateModal() {
 function closeVerifyEmailModal() {
   $("#verifyEmailModal").hide();
 }
+
+function closeRegisterModal() {
+  $("#registerModal").hide();
+}
 //end close modals
 
 //UI
@@ -525,11 +542,13 @@ function adjustUIBasedOnUserRole(userRole, userId) {
     $("#createUserButton").show();
     $("#exportToExcelButton").show();
     $("#userTable .actions").show();
+    $("#userTable .select").show();
+    $("#deleteSelectedUsersButton").show();
 
     updateDeleteButtonVisibility();
 
     $("#userTable .updateUserButton").each(function () {
-      const userId = $(this).data("user-id");
+      const id = $(this).data("user-id");
       const username = $(this).data("username");
       const password = $(this).data("password");
       const name = $(this).data("name");
@@ -539,13 +558,15 @@ function adjustUIBasedOnUserRole(userRole, userId) {
 
       $(this).attr(
         "onclick",
-        `populateUpdateForm(${userId}, '${username}', '${password}', '${name}', '${email}', '${phone}', '${dob}')`
+        `populateUpdateForm(${userId}, ${id}, '${username}', '${password}', '${name}', '${email}', '${phone}', '${dob}')`
       );
     });
   } else {
     $("#createUserButton").hide();
     $("#exportToExcelButton").hide();
     $("#userTable .actions").hide();
+    $("#userTable .select").hide();
+    $("#deleteSelectedUsersButton").hide();
 
     $("#userTable .updateUserButton").each(function () {
       const id = $(this).data("user-id");
@@ -561,14 +582,10 @@ function adjustUIBasedOnUserRole(userRole, userId) {
       } else if (userId === id && !$(this).attr("onclick")) {
         $(this).attr(
           "onclick",
-          `populateUpdateForm(${id}, '${username}', '${password}', '${name}', '${email}', '${phone}', '${dob}')`
+          `populateUpdateForm(${userId}, ${id}, '${username}', '${password}', '${name}', '${email}', '${phone}', '${dob}')`
         );
       }
     });
-    $("#createUserButton").hide();
-    $("#exportToExcelButton").hide();
-    $("#userTable .actions").hide();
-    $("#deleteSelectedUsersButton").hide();
   }
 }
 //end UI
@@ -595,7 +612,7 @@ function updateDeleteButtonVisibility() {
   const checkedBoxes = $("input[type='checkbox']:checked");
   const deleteBtn = $("#deleteSelectedUsersButton");
 
-  deleteBtn.css("display", checkedBoxes.length > 0 ? "block" : "none");
+  deleteBtn.prop("disabled", checkedBoxes.length === 0);
 }
 
 $("#userTable").on("change", "input[type='checkbox']", function () {
@@ -615,24 +632,32 @@ function collectSearchParams() {
     { field: "name", option: "nameSearchOption", value: "nameSearchValue" },
     { field: "email", option: "emailSearchOption", value: "emailSearchValue" },
     { field: "phone", option: "phoneSearchOption", value: "phoneSearchValue" },
-    { field: "dob", option: "dobSearchOption", value: "dobSearchValue" },
+    {
+      field: "dob",
+      option: "dobSearchOption",
+      value: "dobSearchValue",
+      value2: "dobSearchValue2",
+    },
     { field: "role", option: "roleSearchOption" },
     {
       field: "lastLogin",
       option: "lastLoginSearchOption",
       value: "lastLoginSearchValue",
+      value2: "lastLoginSearchValue2",
     },
     {
       field: "createdAt",
       option: "createdAtSearchOption",
       value: "createdAtSearchValue",
+      value2: "createdAtSearchValue2",
     },
   ];
 
   const params = searchOptions
-    .map(({ field, option, value }) => {
+    .map(({ field, option, value, value2 }) => {
       const searchOption = $(`#${option}`).val() || "";
       const searchValue = $(`#${value}`).val() || "";
+      const searchValue2 = $(`#${value2}`).val() || "";
 
       if (
         field === "role" &&
@@ -640,6 +665,22 @@ function collectSearchParams() {
         searchOption !== "chooseAnOption"
       ) {
         return `${field}=${encodeURIComponent(searchOption)}`;
+      } else if (
+        field === "dob" ||
+        field === "lastLogin" ||
+        field === "createdAt"
+      ) {
+        if (searchOption === "between" && searchValue && searchValue2) {
+          return `${field}=${encodeURIComponent(
+            searchOption
+          )}:${encodeURIComponent(searchValue)}_${encodeURIComponent(
+            searchValue2
+          )}`;
+        } else if (searchValue) {
+          return `${field}=${encodeURIComponent(
+            searchOption
+          )}:${encodeURIComponent(searchValue)}`;
+        }
       } else if (
         searchOption &&
         searchOption !== "chooseAnOption" &&
@@ -674,3 +715,71 @@ function collectSearchParams() {
   return finalParams ? finalParams : null;
 }
 //end collect parameters from fields
+
+//Toggle theme function
+function toggleTheme() {
+  const $themeElements = $(
+    "body, header, table, button, h1, h2, a, input, th, label, #welcomeMessage, .modal-content, .sticky-col"
+  );
+  var currentTheme = localStorage.getItem("theme") || "light";
+
+  $themeElements.addClass(currentTheme + "-theme");
+
+  var theme = $("body").hasClass("dark-theme") ? "light" : "dark";
+
+  $themeElements
+    .removeClass("light-theme dark-theme")
+    .addClass(theme + "-theme");
+
+  localStorage.setItem("theme", theme);
+}
+//end toggle theme function
+
+//apply theme function
+function applyTheme(theme) {
+  const $themeElements = $(
+    "body, header, table, button, h1, h2, a, input, th, label, #welcomeMessage, .modal-content, .sticky-col"
+  );
+
+  $themeElements.removeClass("light-theme dark-theme");
+
+  $themeElements.addClass(theme + "-theme");
+}
+//end apply theme function
+
+//open register modal
+$("#registerLink").click(function (event) {
+  event.preventDefault();
+  $("#loginModal").hide();
+  $("#registerModal").show();
+});
+//end open register modal
+
+//go back to login modal
+$("#loginLink").click(function (event) {
+  event.preventDefault();
+  $("#registerModal").hide();
+  $("#loginModal").show();
+});
+//end go back to login modal
+
+//initialize date picker
+function initializeDatePicker(selector) {
+  flatpickr(selector, {
+    dateFormat: "d/m/Y",
+    enableTime: false,
+    minDate: "01/01/1860", // based on max person ever lived
+    maxDate: "today",
+    onChange: function (selectedDates) {
+      if (selectedDates.length > 0) {
+        const date = selectedDates[0];
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, "0"); // Months are zero-based
+        const day = String(date.getDate()).padStart(2, "0");
+        const formattedDate = `${day}/${month}/${year}`;
+        $(selector).val(formattedDate);
+      }
+    },
+  });
+}
+//end initialize date picker

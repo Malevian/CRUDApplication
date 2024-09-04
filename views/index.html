@@ -9,14 +9,21 @@
       href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css"
     />
     <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
-    <title>CRUD Application</title>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <title>CRUD Application</title>
   </head>
   <body>
     <header id="headerContent" style="display: none">
       <div id="authStatus">
         <span id="welcomeMessage"></span>
         <button id="logoutButton" style="display: none">Logout</button>
+        <button
+          id="themeToggleButton"
+          style="margin-left: 10px"
+          onclick="toggleTheme()"
+        >
+          Toggle Theme
+        </button>
       </div>
     </header>
 
@@ -38,18 +45,78 @@
           />
           <button type="submit">Login</button>
         </form>
+        <p>
+          Don't have an account? <a href="#" id="registerLink">Register here</a>
+        </p>
+      </div>
+    </div>
+
+    <div id="registerModal" class="modal" style="display: none">
+      <div class="modal-content">
+        <h2>Register account</h2>
+        <form id="registerForm">
+          <input
+            type="text"
+            id="usernameRegister"
+            placeholder="Username"
+            required
+          />
+          <input type="text" id="nameRegister" placeholder="Name" required />
+          <input type="email" id="emailRegister" placeholder="Email" required />
+          <input type="phone" id="phoneRegister" placeholder="Phone" required />
+          <input
+            type="text"
+            id="dobRegister"
+            placeholder="Date of Birth"
+            required
+          />
+          <input
+            type="password"
+            id="passwordRegister"
+            placeholder="Password"
+            required
+          />
+          <input
+            type="password"
+            id="confirmPasswordRegister"
+            placeholder="Confirm Password"
+            required
+          />
+          <button type="submit">Register</button>
+        </form>
+        <p>
+          Already have an account? <a href="#" id="loginLink">Login here</a>
+        </p>
+      </div>
+    </div>
+
+    <div id="verifyEmailModal" class="modal" style="display: none">
+      <div class="modal-content">
+        <span class="close" onclick="closeVerifyEmailModal()">&times;</span>
+        <h2>Verify Email</h2>
+        <form id="verifyEmailForm">
+          <input type="hidden" id="verifyEmailUserId" />
+          <input
+            type="text"
+            id="verifyEmailCode"
+            placeholder="Verification Code"
+            required
+          />
+          <button type="submit">Verify Email</button>
+        </form>
       </div>
     </div>
 
     <div id="mainContent" style="display: none">
       <h1>Welcome to the User Management System</h1>
 
-      <div class="createUserDiv" style="margin-bottom: 20px">
+      <!-- <div class="createUserDiv" style="margin-bottom: 20px">
         <button id="createUserButton">Create User</button>
-      </div>
+      </div> -->
 
-      <div class="exportToExcelDiv" style="margin-bottom: 20px">
+      <div class="buttons" style="margin-bottom: 20px">
         <button id="exportToExcelButton">Export to Excel</button>
+        <button id="deleteSelectedUsersButton">Delete Selected Users</button>
       </div>
 
       <div id="createUserModal" class="modal" style="display: none">
@@ -105,25 +172,16 @@
               placeholder="Date of Birth"
               required
             />
-            <input type="hidden" id="updatePassword" />
-            <button type="submit">Update User</button>
-          </form>
-        </div>
-      </div>
-
-      <div id="verifyEmailModal" class="modal" style="display: none">
-        <div class="modal-content">
-          <span class="close" onclick="closeVerifyEmailModal()">&times;</span>
-          <h2>Verify Email</h2>
-          <form id="verifyEmailForm">
-            <input type="hidden" id="verifyEmailUserId" />
+            <label id="updatePasswordLabel" style="display: none"
+              >Password</label
+            >
             <input
-              type="text"
-              id="verifyEmailCode"
-              placeholder="Verification Code"
+              type="hidden"
+              id="updatePassword"
+              placeholder="Password"
               required
             />
-            <button type="submit">Verify Email</button>
+            <button type="submit">Update User</button>
           </form>
         </div>
       </div>
@@ -140,96 +198,119 @@
             />
             <input type="text" id="dateTo" placeholder="Select 'End date'" />
           </div>
-          <table id="userTable" border="1" cellpadding="10">
-            <thead>
-              <tr>
-                <th>
-                  <span class="table-title">ID</span>
-                  <select id="idSearchOption" class="search-select">
-                    <option value="chooseAnOption">Choose an option</option>
-                    <option value="greaterOrEquals">
-                      Greater than or equal
-                    </option>
-                    <option value="lessOrEquals">Less than or equal</option>
-                  </select>
-                </th>
-                <th>
-                  <span class="table-title">Username</span>
-                  <select id="usernameSearchOption" class="search-select">
-                    <option value="chooseAnOption">Choose an option</option>
-                    <option value="startsWith">Starts with</option>
-                    <option value="endsWith">Ends with</option>
-                    <option value="contains">Contains</option>
-                  </select>
-                </th>
-                <th>
-                  <span class="table-title">Name</span>
-                  <select id="nameSearchOption" class="search-select">
-                    <option value="chooseAnOption">Choose an option</option>
-                    <option value="startsWith">Starts with</option>
-                    <option value="endsWith">Ends with</option>
-                    <option value="contains">Contains</option>
-                  </select>
-                </th>
-                <th>
-                  <span class="table-title">Email</span>
-                  <select id="emailSearchOption" class="search-select">
-                    <option value="chooseAnOption">Choose an option</option>
-                    <option value="startsWith">Starts with</option>
-                    <option value="endsWith">Ends with</option>
-                    <option value="contains">Contains</option>
-                  </select>
-                </th>
-                <th>
-                  <span class="table-title">Phone</span>
-                  <select id="phoneSearchOption" class="search-select">
-                    <option value="chooseAnOption">Choose an option</option>
-                    <option value="startsWith">Starts with</option>
-                    <option value="endsWith">Ends with</option>
-                    <option value="contains">Contains</option>
-                  </select>
-                </th>
-                <th>
-                  <span class="table-title">Date of Birth</span>
-                  <select id="dobSearchOption" class="search-select">
-                    <option value="chooseAnOption">Choose an option</option>
-                    <option value="startsFrom">Starts from</option>
-                    <option value="endsTo">Ends to</option>
-                  </select>
-                </th>
-                <th>
-                  <span class="table-title">Role</span>
-                  <select id="roleSearchOption" class="search-select">
-                    <option value="chooseAnOption">Choose an option</option>
-                    <option value="user">User</option>
-                    <option value="admin">Admin</option>
-                  </select>
-                </th>
-                <th>
-                  <span class="table-title">Last Login</span>
-                  <select id="lastLoginSearchOption" class="search-select">
-                    <option value="chooseAnOption">Choose an option</option>
-                    <option value="startsFrom">Starts from</option>
-                    <option value="endsTo">Ends to</option>
-                  </select>
-                </th>
-                <th>
-                  <span class="table-title">Created At</span>
-                  <select id="createdAtSearchOption" class="search-select">
-                    <option value="chooseAnOption">Choose an option</option>
-                    <option value="startsFrom">Starts from</option>
-                    <option value="endsTo">Ends to</option>
-                  </select>
-                </th>
-                <th class="actions">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              <!-- info -->
-            </tbody>
-          </table>
+          <div class="table-container">
+            <table id="userTable" border="1" cellpadding="10">
+              <thead>
+                <tr>
+                  <th class="sticky-col">
+                    <div class="th-container">
+                      <span class="table-title">ID</span>
+                      <select id="idSearchOption" class="search-select">
+                        <option value="chooseAnOption">Choose an option</option>
+                        <option value="greaterOrEquals">
+                          Greater than or equal
+                        </option>
+                        <option value="lessOrEquals">Less than or equal</option>
+                      </select>
+                    </div>
+                  </th>
+                  <th class="sticky-col">
+                    <div class="th-container">
+                      <span class="table-title">Username</span>
+                      <select id="usernameSearchOption" class="search-select">
+                        <option value="chooseAnOption">Choose an option</option>
+                        <option value="startsWith">Starts with</option>
+                        <option value="endsWith">Ends with</option>
+                        <option value="contains">Contains</option>
+                      </select>
+                    </div>
+                  </th>
+                  <th>
+                    <div class="th-container">
+                      <span class="table-title">Name</span>
+                      <select id="nameSearchOption" class="search-select">
+                        <option value="chooseAnOption">Choose an option</option>
+                        <option value="startsWith">Starts with</option>
+                        <option value="endsWith">Ends with</option>
+                        <option value="contains">Contains</option>
+                      </select>
+                    </div>
+                  </th>
+                  <th>
+                    <div class="th-container">
+                      <span class="table-title">Email</span>
+                      <select id="emailSearchOption" class="search-select">
+                        <option value="chooseAnOption">Choose an option</option>
+                        <option value="startsWith">Starts with</option>
+                        <option value="endsWith">Ends with</option>
+                        <option value="contains">Contains</option>
+                      </select>
+                    </div>
+                  </th>
+                  <th>
+                    <div class="th-container">
+                      <span class="table-title">Phone</span>
+                      <select id="phoneSearchOption" class="search-select">
+                        <option value="chooseAnOption">Choose an option</option>
+                        <option value="startsWith">Starts with</option>
+                        <option value="endsWith">Ends with</option>
+                        <option value="contains">Contains</option>
+                      </select>
+                    </div>
+                  </th>
+                  <th>
+                    <div class="th-container">
+                      <span class="table-title">Date of Birth</span>
+                      <select id="dobSearchOption" class="search-select">
+                        <option value="chooseAnOption">Choose an option</option>
+                        <option value="startsFrom">Starts from</option>
+                        <option value="endsTo">Ends to</option>
+                        <option value="between">Between</option>
+                      </select>
+                    </div>
+                  </th>
+                  <th>
+                    <div class="th-container">
+                      <span class="table-title">Role</span>
+                      <select id="roleSearchOption" class="search-select">
+                        <option value="chooseAnOption">Choose an option</option>
+                        <option value="user">User</option>
+                        <option value="admin">Admin</option>
+                      </select>
+                    </div>
+                  </th>
+                  <th>
+                    <div class="th-container">
+                      <span class="table-title">Last Login</span>
+                      <select id="lastLoginSearchOption" class="search-select">
+                        <option value="chooseAnOption">Choose an option</option>
+                        <option value="startsFrom">Starts from</option>
+                        <option value="endsTo">Ends to</option>
+                        <option value="between">Between</option>
+                      </select>
+                    </div>
+                  </th>
+                  <th>
+                    <div class="th-container">
+                      <span class="table-title">Created At</span>
+                      <select id="createdAtSearchOption" class="search-select">
+                        <option value="chooseAnOption">Choose an option</option>
+                        <option value="startsFrom">Starts from</option>
+                        <option value="endsTo">Ends to</option>
+                        <option value="between">Between</option>
+                      </select>
+                    </div>
+                  </th>
+                  <th class="actions">Actions</th>
+                  <th class="select">Select</th>
+                </tr>
+              </thead>
+              <tbody>
+                <!-- info -->
+              </tbody>
+            </table>
+          </div>
           <div id="pagination" class="pagination"></div>
-          <button id="deleteSelectedUsersButton">Delete Selected Users</button>
         </div>
       </div>
     </div>

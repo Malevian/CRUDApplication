@@ -3,6 +3,7 @@ const nodemailer = require("nodemailer");
 const jwt = require("jsonwebtoken");
 const User = require("./../models/User");
 const VerificationCode = require("./../models/VerificationCode");
+const { convertToYYYYMMDD } = require("./../utilities/dateUtils");
 
 const secretKey = "some-secret-key";
 
@@ -421,10 +422,14 @@ function searchConditionForPhone(phoneQuery) {
 
 function searchConditionForDob(dateQuery) {
   const [option, value] = dateQuery.split(":");
+  const [value1, value2] = value.split("_").map(convertToYYYYMMDD);
+
   if (option === "startsFrom") {
-    return { [sequelize.Op.gte]: value };
+    return { [sequelize.Op.gte]: value1 };
   } else if (option === "endsTo") {
-    return { [sequelize.Op.lte]: value };
+    return { [sequelize.Op.lte]: value1 };
+  } else if (option === "between" && value1 && value2) {
+    return { [sequelize.Op.between]: [value1, value2] };
   }
   return null;
 }
@@ -441,20 +446,26 @@ function searchConditionForRole(roleQuery) {
 
 function searchConditionForLastLogin(lastLoginQuery) {
   const [option, value] = lastLoginQuery.split(":");
+  const [value1, value2] = value.split("_").map(convertToYYYYMMDD);
   if (option === "startsFrom") {
-    return { [sequelize.Op.gte]: value };
+    return { [sequelize.Op.gte]: value1 };
   } else if (option === "endsTo") {
-    return { [sequelize.Op.lte]: value };
+    return { [sequelize.Op.lte]: value1 };
+  } else if (option === "between" && value1 && value2) {
+    return { [sequelize.Op.between]: [value1, value2] };
   }
   return null;
 }
 
 function searchConditionForCreatedAt(createdAtQuery) {
   const [option, value] = createdAtQuery.split(":");
+  const [value1, value2] = value.split("_").map(convertToYYYYMMDD);
   if (option === "startsFrom") {
-    return { [sequelize.Op.gte]: value };
+    return { [sequelize.Op.gte]: value1 };
   } else if (option === "endsTo") {
-    return { [sequelize.Op.lte]: value };
+    return { [sequelize.Op.lte]: value1 };
+  } else if (option === "between" && value1 && value2) {
+    return { [sequelize.Op.between]: [value1, value2] };
   }
   return null;
 }
@@ -473,10 +484,14 @@ function searchConditionToSearchUsers(value, startDate, endDate) {
     }
 
     if (startDate && endDate) {
+      startDate = convertToYYYYMMDD(startDate);
+      endDate = convertToYYYYMMDD(endDate);
       where.date_of_birth = { [sequelize.Op.between]: [startDate, endDate] };
     } else if (startDate && !endDate) {
+      startDate = convertToYYYYMMDD(startDate);
       where.date_of_birth = { [sequelize.Op.gte]: startDate };
     } else if (!startDate && endDate) {
+      endDate = convertToYYYYMMDD(endDate);
       where.date_of_birth = { [sequelize.Op.lte]: endDate };
     }
     return where;
@@ -491,6 +506,63 @@ function countAllUsersWithCriteria(where) {
 
 function getAllUsersWithCriteria(limit, offset, where) {
   return User.findAll({ where, order: [["id", "ASC"]], limit, offset });
+}
+
+async function registerUser(username, password, name, email, phone, dob) {
+  try {
+    const uniqueUsername = await isUniqueUsername(username);
+    const uniqueEmail = await isUniqueEmail(email);
+
+    if (!uniqueUsername) {
+      return { success: false, message: "Username already exists" };
+    }
+
+    if (!uniqueEmail) {
+      return { success: false, message: "Email already exists" };
+    }
+
+    const verificationCode = await generateVerificationCode();
+    const user = { username, password, name, email, phone, dob };
+    const expiresAt = new Date();
+    expiresAt.setMinutes(expiresAt.getMinutes() + 5);
+
+    const createdUser = await User.create({
+      username: user.username,
+      password: user.password,
+      name: user.name,
+      email: user.email,
+      phone: user.phone,
+      date_of_birth: user.dob,
+    });
+
+    await VerificationCode.create({
+      userId: createdUser.id,
+      code: verificationCode,
+      expiresAt,
+    });
+
+    await sendVerificationCode(user.email, verificationCode);
+
+    console.log("New user created", createdUser.toJSON());
+    return { success: true, user: createdUser.toJSON() };
+  } catch (error) {
+    console.error("Error details:", error);
+
+    if (error instanceof sequelize.ValidationError) {
+      const messages = error.errors.map((e) => e.message).join(", ");
+      console.log("Validation Error Messages:", messages);
+      return {
+        success: false,
+        message: messages,
+      };
+    } else if (error instanceof sequelize.DatabaseError) {
+      console.log("Database Error");
+      return { success: false, message: error.message };
+    } else {
+      console.log("Unknown Error");
+      return { success: false, message: "Error creating new user" };
+    }
+  }
 }
 
 module.exports = {
@@ -517,4 +589,5 @@ module.exports = {
   searchConditionToSearchUsers,
   countAllUsersWithCriteria,
   getAllUsersWithCriteria,
+  registerUser,
 };
