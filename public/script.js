@@ -432,10 +432,15 @@ async function loadUsers(page = 1) {
         if ($select.length) {
           $select.on("change", function () {
             const idPrefix = id.split("SearchOption")[0];
+            const $primaryInput = $(`#${idPrefix}SearchValue`);
             const $secondaryInput = $(`#${idPrefix}SearchValue2`);
             if ($select.val() === "between") {
+              $primaryInput.attr("placeholder", "Select 'Start date'");
+              $secondaryInput.attr("placeholder", "Select 'End date'");
               $secondaryInput.show();
             } else {
+              $primaryInput.attr("placeholder", "");
+              $secondaryInput.attr("placeholder", "");
               $secondaryInput.hide();
             }
             loadUsers();

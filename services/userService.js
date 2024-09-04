@@ -361,113 +361,78 @@ async function deleteInList(ids) {
   }
 }
 
-function searchConditionForId(idQuery) {
-  const [option, value] = idQuery.split(":");
-  if (option === "greaterOrEquals") {
-    return { [sequelize.Op.gte]: value };
-  } else if (option === "lessOrEquals") {
-    return { [sequelize.Op.lte]: value };
+function createSearchCondition(option, value, isDate = false) {
+  if (isDate) {
+    const [startDate, endDate] = value.split("_").map(convertToYYYYMMDD);
+    switch (option) {
+      case "startsFrom":
+        return { [sequelize.Op.gte]: startDate };
+      case "endsTo":
+        return { [sequelize.Op.lte]: startDate };
+      case "between":
+        return { [sequelize.Op.between]: [startDate, endDate] };
+    }
+  } else {
+    switch (option) {
+      case "greaterOrEquals":
+        return { [sequelize.Op.gte]: value };
+      case "lessOrEquals":
+        return { [sequelize.Op.lte]: value };
+      case "startsWith":
+        return { [sequelize.Op.like]: `${value}%` };
+      case "endsWith":
+        return { [sequelize.Op.like]: `%${value}` };
+      case "contains":
+        return { [sequelize.Op.like]: `%${value}%` };
+      case "eq":
+        return { [sequelize.Op.eq]: value };
+    }
   }
   return null;
+}
+
+function searchConditionForId(idQuery) {
+  const [option, value] = idQuery.split(":");
+  return createSearchCondition(option, value);
 }
 
 function searchConditionForUsername(usernameQuery) {
   const [option, value] = usernameQuery.split(":");
-
-  if (option === "startsWith") {
-    return { [sequelize.Op.like]: `${value}%` };
-  } else if (option === "endsWith") {
-    return { [sequelize.Op.like]: `%${value}` };
-  } else if (option === "contains") {
-    return { [sequelize.Op.like]: `%${value}%` };
-  }
-  return null;
+  return createSearchCondition(option, value);
 }
 
 function searchConditionForName(nameQuery) {
   const [option, value] = nameQuery.split(":");
-  if (option === "startsWith") {
-    return { [sequelize.Op.like]: `${value}%` };
-  } else if (option === "endsWith") {
-    return { [sequelize.Op.like]: `%${value}` };
-  } else if (option === "contains") {
-    return { [sequelize.Op.like]: `%${value}%` };
-  }
-  return null;
+  return createSearchCondition(option, value);
 }
 
 function searchConditionForEmail(emailQuery) {
   const [option, value] = emailQuery.split(":");
-  if (option === "startsWith") {
-    return { [sequelize.Op.like]: `${value}%` };
-  } else if (option === "endsWith") {
-    return { [sequelize.Op.like]: `%${value}` };
-  } else if (option === "contains") {
-    return { [sequelize.Op.like]: `%${value}%` };
-  }
-  return null;
+  return createSearchCondition(option, value);
 }
 
 function searchConditionForPhone(phoneQuery) {
   const [option, value] = phoneQuery.split(":");
-  if (option === "startsWith") {
-    return { [sequelize.Op.like]: `${value}%` };
-  } else if (option === "endsWith") {
-    return { [sequelize.Op.like]: `%${value}` };
-  } else if (option === "contains") {
-    return { [sequelize.Op.like]: `%${value}%` };
-  }
-  return null;
+  return createSearchCondition(option, value);
 }
 
 function searchConditionForDob(dateQuery) {
   const [option, value] = dateQuery.split(":");
-  const [value1, value2] = value.split("_").map(convertToYYYYMMDD);
-
-  if (option === "startsFrom") {
-    return { [sequelize.Op.gte]: value1 };
-  } else if (option === "endsTo") {
-    return { [sequelize.Op.lte]: value1 };
-  } else if (option === "between" && value1 && value2) {
-    return { [sequelize.Op.between]: [value1, value2] };
-  }
-  return null;
+  return createSearchCondition(option, value, true);
 }
 
 function searchConditionForRole(roleQuery) {
-  const option = roleQuery;
-  if (option === "user") {
-    return { [sequelize.Op.eq]: "user" };
-  } else if (option === "admin") {
-    return { [sequelize.Op.eq]: "admin" };
-  }
-  return null;
+  return createSearchCondition("eq", roleQuery);
 }
 
 function searchConditionForLastLogin(lastLoginQuery) {
   const [option, value] = lastLoginQuery.split(":");
-  const [value1, value2] = value.split("_").map(convertToYYYYMMDD);
-  if (option === "startsFrom") {
-    return { [sequelize.Op.gte]: value1 };
-  } else if (option === "endsTo") {
-    return { [sequelize.Op.lte]: value1 };
-  } else if (option === "between" && value1 && value2) {
-    return { [sequelize.Op.between]: [value1, value2] };
-  }
-  return null;
+  return createSearchCondition(option, value, true);
 }
 
 function searchConditionForCreatedAt(createdAtQuery) {
   const [option, value] = createdAtQuery.split(":");
-  const [value1, value2] = value.split("_").map(convertToYYYYMMDD);
-  if (option === "startsFrom") {
-    return { [sequelize.Op.gte]: value1 };
-  } else if (option === "endsTo") {
-    return { [sequelize.Op.lte]: value1 };
-  } else if (option === "between" && value1 && value2) {
-    return { [sequelize.Op.between]: [value1, value2] };
-  }
-  return null;
+  return createSearchCondition(option, value, true);
 }
 
 function searchConditionToSearchUsers(value, startDate, endDate) {
