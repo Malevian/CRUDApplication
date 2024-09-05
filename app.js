@@ -4,33 +4,22 @@ const path = require("path");
 const bodyParser = require("body-parser");
 const {
   createUser,
-  getAllUsers,
   updateUser,
   deleteUserById,
   verifyEmail,
   login,
-  countAllUsers,
-  countAllSearchedUsers,
-  searchUsers,
   deleteInList,
   getAllUsersWithoutLimit,
-  searchConditionForId,
-  searchConditionForUsername,
-  searchConditionForName,
-  searchConditionForEmail,
-  searchConditionForPhone,
-  searchConditionForDob,
-  searchConditionForRole,
-  searchConditionForLastLogin,
-  searchConditionForCreatedAt,
   searchConditionToSearchUsers,
   countAllUsersWithCriteria,
   getAllUsersWithCriteria,
   registerUser,
+  createSearchCondition,
 } = require("./services/userService");
 const { formatDate, formatDateWithTime } = require("./utilities/dateUtils");
 const sequelize = require("./database");
 const { exportUsersToExcel } = require("./services/excelService");
+const { isDate } = require("util/types");
 
 const port = 3000;
 const app = express();
@@ -95,9 +84,9 @@ app.get("/users", authenticateToken, async (req, res) => {
 
     let searchCondition = {};
 
-    const addCondition = (key, value, formatter) => {
-      if (value && formatter(value)) {
-        searchCondition[key] = formatter(value);
+    const addCondition = (key, value, formatter, isDate = false) => {
+      if (value && formatter(value, isDate)) {
+        searchCondition[key] = formatter(value, isDate);
       }
     };
 
@@ -108,15 +97,21 @@ app.get("/users", authenticateToken, async (req, res) => {
       );
     }
 
-    addCondition("id", id, searchConditionForId);
-    addCondition("username", username, searchConditionForUsername);
-    addCondition("name", name, searchConditionForName);
-    addCondition("email", email, searchConditionForEmail);
-    addCondition("phone", phone, searchConditionForPhone);
-    addCondition("date_of_birth", dob, searchConditionForDob);
-    addCondition("role", role, searchConditionForRole);
-    addCondition("last_login", lastLogin, searchConditionForLastLogin);
-    addCondition("created_at", createdAt, searchConditionForCreatedAt);
+    const fields = [
+      { key: "id", value: id },
+      { key: "username", value: username },
+      { key: "name", value: name },
+      { key: "email", value: email },
+      { key: "phone", value: phone },
+      { key: "date_of_birth", value: dob, isDate: true },
+      { key: "role", value: role },
+      { key: "last_login", value: lastLogin, isDate: true },
+      { key: "created_at", value: createdAt, isDate: true },
+    ];
+
+    fields.forEach(({ key, value, isDate }) => {
+      addCondition(key, value, createSearchCondition, isDate);
+    });
 
     const allUsersCounter = await countAllUsersWithCriteria(searchCondition);
     let users = await getAllUsersWithCriteria(limit, offset, searchCondition);
@@ -127,6 +122,7 @@ app.get("/users", authenticateToken, async (req, res) => {
       last_login: formatDateWithTime(user.last_login),
       date_of_birth: formatDate(user.date_of_birth),
     }));
+
     res.json({
       totalUsers: users.length,
       totalPages: Math.ceil(allUsersCounter / limit),
@@ -209,22 +205,6 @@ app.post(
     }
   }
 );
-
-// Verify email
-// app.post("/users/verify-email/", authenticateToken, async (req, res) => {
-//   const { code } = req.body;
-//   try {
-//     const result = await verifyEmail(code);
-//     if (result.success) {
-//       res.status(201).json({ success: true, message: result.message });
-//     } else {
-//       res.status(400).json({ success: false, message: result.message });
-//     }
-//   } catch (error) {
-//     console.log(error);
-//     res.status(500).json({ success: false, message: "Error verifying email" });
-//   }
-// });
 
 app.post("/verify-email/", async (req, res) => {
   const { code } = req.body;

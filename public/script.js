@@ -124,57 +124,57 @@ $(document).ready(async function () {
   updateDeleteButtonVisibility();
 
   //create user modal
-  $("#createUserButton").click(() => {
-    $("#createUserModal").show();
-  });
+  // $("#createUserButton").click(() => {
+  //   $("#createUserModal").show();
+  // });
   //end create user modal
 
   //create user form
-  $("#createUserForm").submit(async function (event) {
-    event.preventDefault();
-    const username = $("#username").val();
-    const name = $("#name").val();
-    const email = $("#email").val();
-    const phone = $("#phone").val();
-    const dob = $("#dob").val();
-    const password = $("#password").val();
-    const confirmPassword = $("#confirmPassword").val();
+  // $("#createUserForm").submit(async function (event) {
+  //   event.preventDefault();
+  //   const username = $("#username").val();
+  //   const name = $("#name").val();
+  //   const email = $("#email").val();
+  //   const phone = $("#phone").val();
+  //   const dob = $("#dob").val();
+  //   const password = $("#password").val();
+  //   const confirmPassword = $("#confirmPassword").val();
 
-    const regex =
-      /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+  //   const regex =
+  //     /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
 
-    if (!regex.test(password)) {
-      alert(
-        "Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character"
-      );
-      return;
-    }
+  //   if (!regex.test(password)) {
+  //     alert(
+  //       "Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character"
+  //     );
+  //     return;
+  //   }
 
-    if (password !== confirmPassword) {
-      alert("Passwords do not match");
-      return;
-    }
+  //   if (password !== confirmPassword) {
+  //     alert("Passwords do not match");
+  //     return;
+  //   }
 
-    try {
-      const response = await $.ajax({
-        url: "/users/create",
-        method: "POST",
-        headers: {
-          "Content-Type": "application/x-www-form-urlencoded",
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-        },
-        data: $.param({ username, password, name, email, phone, dob }),
-      });
+  //   try {
+  //     const response = await $.ajax({
+  //       url: "/users/create",
+  //       method: "POST",
+  //       headers: {
+  //         "Content-Type": "application/x-www-form-urlencoded",
+  //         Authorization: `Bearer ${localStorage.getItem("token")}`,
+  //       },
+  //       data: $.param({ username, password, name, email, phone, dob }),
+  //     });
 
-      $("#createUserForm").trigger("reset");
+  //     $("#createUserForm").trigger("reset");
 
-      closeCreateModal();
-      $("#verifyEmailModal").show();
-      $("#verifyEmailUserId").value = response.user.id;
-    } catch (error) {
-      console.error("Error creating user", error);
-    }
-  });
+  //     closeCreateModal();
+  //     $("#verifyEmailModal").show();
+  //     $("#verifyEmailUserId").value = response.user.id;
+  //   } catch (error) {
+  //     console.error("Error creating user", error);
+  //   }
+  // });
   //end create user form
 
   //update user form
@@ -334,25 +334,15 @@ async function loadUsers(page = 1) {
     users.forEach((user) => {
       $tableBody.append(`
             <tr id="user-${user.id}">
-              <td class="sticky-col"><a href="#" class="updateUserButton" data-user-id="${
-                user.id
-              }"
-                                                       data-username="${
-                                                         user.username
-                                                       }"
-                                                       data-password="${
-                                                         user.password
-                                                       }"
-                                                       data-name="${user.name}"
-                                                       data-email="${
-                                                         user.email
-                                                       }"
-                                                       data-phone="${
-                                                         user.phone
-                                                       }"
-                                                       data-dob="${
-                                                         user.date_of_birth
-                                                       }">${user.id}</a></td>
+              <td class="sticky-col"><a href="#" class="updateUserButton" 
+                data-user-id="${user.id}"
+                data-username="${user.username}"
+                data-password="${user.password}"
+                data-name="${user.name}"
+                data-email="${user.email}"
+                data-phone="${user.phone}"
+                data-dob="${user.date_of_birth}">${user.id}</a>
+              </td>
               <td class="sticky-col">${user.username}</td>
               <td>${user.name}</td>
               <td>${user.email}</td>
@@ -524,9 +514,9 @@ function populateUpdateForm(
 //end populate update form
 
 //close modals
-function closeCreateModal() {
-  $("#createUserModal").hide();
-}
+// function closeCreateModal() {
+//   $("#createUserModal").hide();
+// }
 
 function closeUpdateModal() {
   $("#updateUserModal").hide();
@@ -543,55 +533,33 @@ function closeRegisterModal() {
 
 //UI
 function adjustUIBasedOnUserRole(userRole, userId) {
-  if (userRole === "admin") {
-    $("#createUserButton").show();
-    $("#exportToExcelButton").show();
-    $("#userTable .actions").show();
-    $("#userTable .select").show();
-    $("#deleteSelectedUsersButton").show();
+  const isAdmin = userRole === "admin";
 
+  $(
+    "#exportToExcelButton, #userTable .actions, #userTable .select, #deleteSelectedUsersButton"
+  ).toggle(isAdmin);
+
+  if (isAdmin) {
     updateDeleteButtonVisibility();
-
-    $("#userTable .updateUserButton").each(function () {
-      const id = $(this).data("user-id");
-      const username = $(this).data("username");
-      const password = $(this).data("password");
-      const name = $(this).data("name");
-      const email = $(this).data("email");
-      const phone = $(this).data("phone");
-      const dob = $(this).data("dob");
-
-      $(this).attr(
-        "onclick",
-        `populateUpdateForm(${userId}, ${id}, '${username}', '${password}', '${name}', '${email}', '${phone}', '${dob}')`
-      );
-    });
-  } else {
-    $("#createUserButton").hide();
-    $("#exportToExcelButton").hide();
-    $("#userTable .actions").hide();
-    $("#userTable .select").hide();
-    $("#deleteSelectedUsersButton").hide();
-
-    $("#userTable .updateUserButton").each(function () {
-      const id = $(this).data("user-id");
-      const username = $(this).data("username");
-      const password = $(this).data("password");
-      const name = $(this).data("name");
-      const email = $(this).data("email");
-      const phone = $(this).data("phone");
-      const dob = $(this).data("dob");
-
-      if (userId !== id) {
-        $(this).removeAttr("onclick");
-      } else if (userId === id && !$(this).attr("onclick")) {
-        $(this).attr(
-          "onclick",
-          `populateUpdateForm(${userId}, ${id}, '${username}', '${password}', '${name}', '${email}', '${phone}', '${dob}')`
-        );
-      }
-    });
   }
+
+  $("#userTable .updateUserButton").each(function () {
+    const id = $(this).data("user-id");
+    const username = $(this).data("username");
+    const password = $(this).data("password");
+    const name = $(this).data("name");
+    const email = $(this).data("email");
+    const phone = $(this).data("phone");
+    const dob = $(this).data("dob");
+
+    const onclickValue = `populateUpdateForm(${userId}, ${id}, '${username}', '${password}', '${name}', '${email}', '${phone}', '${dob}')`;
+
+    if (isAdmin || userId === id) {
+      $(this).attr("onclick", onclickValue);
+    } else {
+      $(this).removeAttr("onclick");
+    }
+  });
 }
 //end UI
 
@@ -669,7 +637,7 @@ function collectSearchParams() {
         searchOption &&
         searchOption !== "chooseAnOption"
       ) {
-        return `${field}=${encodeURIComponent(searchOption)}`;
+        return `${field}=eq:${encodeURIComponent(searchOption)}`;
       } else if (
         field === "dob" ||
         field === "lastLogin" ||
@@ -734,7 +702,7 @@ function toggleTheme() {
 
   $themeElements
     .removeClass("light-theme dark-theme")
-    .addClass(theme + "-theme");
+    .addClass(`${theme}-theme`);
 
   localStorage.setItem("theme", theme);
 }
@@ -746,9 +714,9 @@ function applyTheme(theme) {
     "body, header, table, button, h1, h2, a, input, th, label, #welcomeMessage, .modal-content, .sticky-col"
   );
 
-  $themeElements.removeClass("light-theme dark-theme");
-
-  $themeElements.addClass(theme + "-theme");
+  $themeElements
+    .removeClass("light-theme dark-theme")
+    .addClass(`${theme}-theme`);
 }
 //end apply theme function
 

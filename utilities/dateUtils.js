@@ -5,7 +5,7 @@ function formatDate(date) {
   const month = String(date.getMonth() + 1).padStart(2, "0");
   const year = date.getFullYear();
 
-  return `${day}-${month}-${year}`;
+  return `${day}/${month}/${year}`;
 }
 
 function formatDateWithTime(date) {
@@ -23,7 +23,7 @@ function formatDateWithTime(date) {
 }
 
 function convertToYYYYMMDD(date) {
-  const [year, month, day] = date.split("/");
+  const [day, month, year] = date.split("/");
   return `${year}-${month}-${day}`;
 }
 

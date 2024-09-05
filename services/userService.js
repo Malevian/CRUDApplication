@@ -9,8 +9,10 @@ const secretKey = "some-secret-key";
 
 async function createUser(username, password, name, email, phone, dob) {
   try {
-    const uniqueUsername = await isUniqueUsername(username);
-    const uniqueEmail = await isUniqueEmail(email);
+    const [uniqueUsername, uniqueEmail] = await Promise.all([
+      isUniqueUsername(username),
+      isUniqueEmail(email),
+    ]);
 
     if (!uniqueUsername) {
       return { success: false, message: "Username already exists" };
@@ -21,29 +23,27 @@ async function createUser(username, password, name, email, phone, dob) {
     }
 
     const verificationCode = await generateVerificationCode();
-    const user = { username, password, name, email, phone, dob };
-    const expiresAt = new Date();
-    expiresAt.setMinutes(expiresAt.getMinutes() + 5);
+    const expiresAt = new Date(Date.now() + 5 * 60 * 1000);
 
-    const createdUser = await User.create({
-      username: user.username,
-      password: user.password,
-      name: user.name,
-      email: user.email,
-      phone: user.phone,
-      date_of_birth: user.dob,
+    const user = await User.create({
+      username,
+      password,
+      name,
+      email,
+      phone,
+      date_of_birth: dob,
     });
 
     await VerificationCode.create({
-      userId: createdUser.id,
+      userId: user.id,
       code: verificationCode,
       expiresAt,
     });
 
     await sendVerificationCode(user.email, verificationCode);
 
-    console.log("New user created", createdUser.toJSON());
-    return { success: true, user: createdUser.toJSON() };
+    console.log("New user created", user.toJSON());
+    return { success: true, user: user.toJSON() };
   } catch (error) {
     console.error("Error details:", error);
 
@@ -118,27 +118,6 @@ async function deleteUserById(id) {
   }
 }
 
-async function getAllUsers(limit = 10, offset = 0) {
-  try {
-    const users = await User.findAll({
-      where: {
-        verified: true,
-      },
-      order: [["id", "ASC"]],
-      limit,
-      offset,
-    });
-    // console.log("All users", JSON.stringify(users, null, 2));
-    return users;
-  } catch (error) {
-    if (error instanceof sequelize.DatabaseError) {
-      console.error("Database error", error.message);
-    } else {
-      console.error("Error getting all users", error);
-    }
-  }
-}
-
 async function getAllUsersWithoutLimit() {
   try {
     const users = await User.findAll({
@@ -158,59 +137,13 @@ async function getAllUsersWithoutLimit() {
   }
 }
 
-async function searchUsers({
-  value,
-  startDate,
-  endDate,
-  limit = 10,
-  offset = 0,
-}) {
-  try {
-    const where = {};
-
-    if (value) {
-      where[sequelize.Op.or] = {
-        username: { [sequelize.Op.iLike]: `%${value}%` },
-        email: { [sequelize.Op.iLike]: `%${value}%` },
-        phone: { [sequelize.Op.iLike]: `%${value}%` },
-      };
-    }
-
-    if (startDate && endDate) {
-      where.date_of_birth = { [sequelize.Op.between]: [startDate, endDate] };
-    } else if (startDate && !endDate) {
-      where.date_of_birth = { [sequelize.Op.gte]: startDate };
-    } else if (!startDate && endDate) {
-      where.date_of_birth = { [sequelize.Op.lte]: endDate };
-    }
-
-    const users = await User.findAll({
-      where,
-      limit,
-      offset,
-    });
-
-    // console.log(
-    //   "Users found",
-    //   users.map((user) => user.toJSON())
-    // );
-    return users;
-  } catch (error) {
-    if (error instanceof sequelize.DatabaseError) {
-      console.error("Database error", error.message);
-    } else {
-      console.error("Error getting users", error);
-    }
-    return [];
-  }
-}
-
 async function isUniqueUsername(username) {
   try {
     const user = await User.findOne({ where: { username } });
     return user === null;
   } catch (error) {
     console.error("Error checking if username is unique", error);
+    return false;
   }
 }
 
@@ -220,11 +153,11 @@ async function isUniqueEmail(email) {
     return user === null;
   } catch (error) {
     console.error("Error checking if email is unique", error);
+    return false;
   }
 }
 
 async function generateVerificationCode() {
-  //return crypto.randomBytes(32).toString("hex");
   return Math.floor(100000 + Math.random() * 900000).toString();
 }
 
@@ -252,17 +185,18 @@ async function verifyEmail(code) {
     const verificationCode = await VerificationCode.findOne({
       where: { code },
     });
+
     if (!verificationCode) {
       return { success: false, message: "Invalid verification code." };
     }
+
     const user = await User.findByPk(verificationCode.userId);
     if (!user) {
       return { success: false, message: "User not found." };
     }
-    const expiresAt = verificationCode.expiresAt;
+
     const curTime = new Date();
-    const timeDiff = (curTime - expiresAt) / 1000 / 60;
-    if (timeDiff > 5) {
+    if (curTime > verificationCode.expiresAt) {
       return { success: false, message: "Verification code expired." };
     }
 
@@ -311,32 +245,6 @@ async function login(username, password) {
   }
 }
 
-function countAllUsers() {
-  return User.count();
-}
-
-function countAllSearchedUsers({ value, startDate, endDate }) {
-  const where = {};
-
-  if (value) {
-    where[sequelize.Op.or] = {
-      username: { [sequelize.Op.iLike]: `%${value}%` },
-      email: { [sequelize.Op.iLike]: `%${value}%` },
-      phone: { [sequelize.Op.iLike]: `%${value}%` },
-    };
-  }
-
-  if (startDate && endDate) {
-    where.date_of_birth = { [sequelize.Op.between]: [startDate, endDate] };
-  } else if (startDate && !endDate) {
-    where.date_of_birth = { [sequelize.Op.gte]: startDate };
-  } else if (!startDate && endDate) {
-    where.date_of_birth = { [sequelize.Op.lte]: endDate };
-  }
-
-  return User.count({ where });
-}
-
 async function deleteInList(ids) {
   try {
     const admins = await User.findAll({
@@ -361,78 +269,28 @@ async function deleteInList(ids) {
   }
 }
 
-function createSearchCondition(option, value, isDate = false) {
+function createSearchCondition(query, isDate = false) {
+  const [option, value] = query.split(":");
+
   if (isDate) {
-    const [startDate, endDate] = value.split("_").map(convertToYYYYMMDD);
-    switch (option) {
-      case "startsFrom":
-        return { [sequelize.Op.gte]: startDate };
-      case "endsTo":
-        return { [sequelize.Op.lte]: startDate };
-      case "between":
-        return { [sequelize.Op.between]: [startDate, endDate] };
-    }
-  } else {
-    switch (option) {
-      case "greaterOrEquals":
-        return { [sequelize.Op.gte]: value };
-      case "lessOrEquals":
-        return { [sequelize.Op.lte]: value };
-      case "startsWith":
-        return { [sequelize.Op.like]: `${value}%` };
-      case "endsWith":
-        return { [sequelize.Op.like]: `%${value}` };
-      case "contains":
-        return { [sequelize.Op.like]: `%${value}%` };
-      case "eq":
-        return { [sequelize.Op.eq]: value };
-    }
+    let [startDate, endDate] = value.split("_").map(convertToYYYYMMDD);
+    const dateConditions = {
+      startsFrom: { [sequelize.Op.gte]: startDate },
+      endsTo: { [sequelize.Op.lte]: endDate },
+      between: { [sequelize.Op.between]: [startDate, endDate] },
+    };
+    return dateConditions[option];
   }
-  return null;
-}
 
-function searchConditionForId(idQuery) {
-  const [option, value] = idQuery.split(":");
-  return createSearchCondition(option, value);
-}
-
-function searchConditionForUsername(usernameQuery) {
-  const [option, value] = usernameQuery.split(":");
-  return createSearchCondition(option, value);
-}
-
-function searchConditionForName(nameQuery) {
-  const [option, value] = nameQuery.split(":");
-  return createSearchCondition(option, value);
-}
-
-function searchConditionForEmail(emailQuery) {
-  const [option, value] = emailQuery.split(":");
-  return createSearchCondition(option, value);
-}
-
-function searchConditionForPhone(phoneQuery) {
-  const [option, value] = phoneQuery.split(":");
-  return createSearchCondition(option, value);
-}
-
-function searchConditionForDob(dateQuery) {
-  const [option, value] = dateQuery.split(":");
-  return createSearchCondition(option, value, true);
-}
-
-function searchConditionForRole(roleQuery) {
-  return createSearchCondition("eq", roleQuery);
-}
-
-function searchConditionForLastLogin(lastLoginQuery) {
-  const [option, value] = lastLoginQuery.split(":");
-  return createSearchCondition(option, value, true);
-}
-
-function searchConditionForCreatedAt(createdAtQuery) {
-  const [option, value] = createdAtQuery.split(":");
-  return createSearchCondition(option, value, true);
+  const conditions = {
+    greaterOrEquals: { [sequelize.Op.gte]: value },
+    lessOrEquals: { [sequelize.Op.lte]: value },
+    startsWith: { [sequelize.Op.iLike]: `${value}%` },
+    endsWith: { [sequelize.Op.iLike]: `%${value}` },
+    contains: { [sequelize.Op.iLike]: `%${value}%` },
+    eq: { [sequelize.Op.eq]: value },
+  };
+  return conditions[option] || null;
 }
 
 function searchConditionToSearchUsers(value, startDate, endDate) {
@@ -440,25 +298,23 @@ function searchConditionToSearchUsers(value, startDate, endDate) {
     const where = {};
 
     if (value) {
-      where[sequelize.Op.or] = {
-        username: { [sequelize.Op.like]: `%${value}%` },
-        name: { [sequelize.Op.iLike]: `%${value}%` },
-        email: { [sequelize.Op.iLike]: `%${value}%` },
-        phone: { [sequelize.Op.iLike]: `%${value}%` },
+      where[sequelize.Op.or] = ["username", "name", "email", "phone"].map(
+        (field) => ({ [field]: { [sequelize.Op.like]: `%${value}%` } })
+      );
+    }
+
+    if (startDate || endDate) {
+      startDate = startDate ? convertToYYYYMMDD(startDate) : null;
+      endDate = endDate ? convertToYYYYMMDD(endDate) : null;
+
+      where.date_of_birth = {
+        ...(startDate && { [sequelize.Op.gte]: startDate }),
+        ...(endDate && { [sequelize.Op.lte]: endDate }),
+        ...(startDate &&
+          endDate && { [sequelize.Op.between]: [startDate, endDate] }),
       };
     }
 
-    if (startDate && endDate) {
-      startDate = convertToYYYYMMDD(startDate);
-      endDate = convertToYYYYMMDD(endDate);
-      where.date_of_birth = { [sequelize.Op.between]: [startDate, endDate] };
-    } else if (startDate && !endDate) {
-      startDate = convertToYYYYMMDD(startDate);
-      where.date_of_birth = { [sequelize.Op.gte]: startDate };
-    } else if (!startDate && endDate) {
-      endDate = convertToYYYYMMDD(endDate);
-      where.date_of_birth = { [sequelize.Op.lte]: endDate };
-    }
     return where;
   } catch (error) {
     console.log(error);
@@ -475,8 +331,10 @@ function getAllUsersWithCriteria(limit, offset, where) {
 
 async function registerUser(username, password, name, email, phone, dob) {
   try {
-    const uniqueUsername = await isUniqueUsername(username);
-    const uniqueEmail = await isUniqueEmail(email);
+    const [uniqueUsername, uniqueEmail] = await Promise.all([
+      isUniqueUsername(username),
+      isUniqueEmail(email),
+    ]);
 
     if (!uniqueUsername) {
       return { success: false, message: "Username already exists" };
@@ -487,29 +345,27 @@ async function registerUser(username, password, name, email, phone, dob) {
     }
 
     const verificationCode = await generateVerificationCode();
-    const user = { username, password, name, email, phone, dob };
-    const expiresAt = new Date();
-    expiresAt.setMinutes(expiresAt.getMinutes() + 5);
+    const expiresAt = new Date(Date.now() + 5 * 60 * 1000);
 
-    const createdUser = await User.create({
-      username: user.username,
-      password: user.password,
-      name: user.name,
-      email: user.email,
-      phone: user.phone,
-      date_of_birth: user.dob,
+    const user = await User.create({
+      username,
+      password,
+      name,
+      email,
+      phone,
+      date_of_birth: dob,
     });
 
     await VerificationCode.create({
-      userId: createdUser.id,
+      userId: user.id,
       code: verificationCode,
       expiresAt,
     });
 
     await sendVerificationCode(user.email, verificationCode);
 
-    console.log("New user created", createdUser.toJSON());
-    return { success: true, user: createdUser.toJSON() };
+    console.log("New user created", user.toJSON());
+    return { success: true, user: user.toJSON() };
   } catch (error) {
     console.error("Error details:", error);
 
@@ -532,27 +388,15 @@ async function registerUser(username, password, name, email, phone, dob) {
 
 module.exports = {
   createUser,
-  getAllUsers,
   updateUser,
   deleteUserById,
   verifyEmail,
   login,
-  countAllUsers,
-  countAllSearchedUsers,
-  searchUsers,
   deleteInList,
   getAllUsersWithoutLimit,
-  searchConditionForId,
-  searchConditionForUsername,
-  searchConditionForName,
-  searchConditionForEmail,
-  searchConditionForPhone,
-  searchConditionForDob,
-  searchConditionForRole,
-  searchConditionForLastLogin,
-  searchConditionForCreatedAt,
   searchConditionToSearchUsers,
   countAllUsersWithCriteria,
   getAllUsersWithCriteria,
   registerUser,
+  createSearchCondition,
 };
