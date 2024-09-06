@@ -121,28 +121,5 @@ User.prototype.verifyPassword = async function (password) {
   return await bcrypt.compare(password, hashedPassword);
 };
 
-//temp function (use only 1 time)
-
-// async function createUser() {
-//   try {
-//     const newUser = await User.create({
-//       username: "AdminUser",
-//       password: "Abcd123@",
-//       name: "Malevian",
-//       email: "myEmail@email.com",
-//       phone: "9090909090",
-//       role: "admin",
-//       date_of_birth: "10/04/2004",
-//       verified: true,
-//     });
-
-//     console.log("User created successfully:", newUser.toJSON());
-//   } catch (error) {
-//     console.error("Error creating user:", error);
-//   }
-// }
-
-// createUser();
-
-//User.sync({ alter: true });
+User.sync({ alter: true });
 module.exports = User;

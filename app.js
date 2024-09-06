@@ -16,10 +16,20 @@ const {
   registerUser,
   createSearchCondition,
 } = require("./services/userService");
+const {
+  addNewClass,
+  addUserToClass,
+  addUsersToClass,
+  getAllUsersInClass,
+  getAllUsersNotInClass,
+  countAllUsersInClass,
+  removeClass,
+  getAllClasses,
+  getClassById,
+} = require("./services/classService");
 const { formatDate, formatDateWithTime } = require("./utilities/dateUtils");
 const sequelize = require("./database");
 const { exportUsersToExcel } = require("./services/excelService");
-const { isDate } = require("util/types");
 
 const port = 3000;
 const app = express();
@@ -58,6 +68,10 @@ function authorizeUser(req, res, next) {
 // Serve the index.html page
 app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "views", "index.html"));
+});
+
+app.get("/classes", (req, res) => {
+  res.sendFile(path.join(__dirname, "views", "classes.html"));
 });
 
 // Get all users or search by value
@@ -326,6 +340,125 @@ app.delete(
     }
   }
 );
+
+//Classes
+app.get("/api/classes", authenticateToken, async (req, res) => {
+  try {
+    const classes = await getAllClasses();
+    res.status(200).json(classes);
+  } catch (error) {
+    console.error("Error getting all classes:", error);
+    res
+      .status(500)
+      .json({ success: false, message: "Error getting all classes" });
+  }
+});
+
+app.get("/api/classes/:id", authenticateToken, async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const classDetails = await getClassById(id);
+    if (classDetails) {
+      res.json({
+        id: classDetails.id,
+        name: classDetails.name,
+        description: classDetails.description,
+        creationDate: formatDateWithTime(classDetails.creationDate),
+        startDate: formatDateWithTime(classDetails.startDate),
+        endDate: formatDateWithTime(classDetails.endDate),
+      });
+    } else {
+      res.status(404).json({ success: false, message: "Class not found" });
+    }
+  } catch (error) {
+    console.error("Error getting class details:", error);
+    res
+      .status(500)
+      .json({ success: false, message: "Error getting class details" });
+  }
+});
+
+app.get("/api/classes/:id/students", authenticateToken, async (req, res) => {
+  const { id } = req.params;
+  try {
+    const students = await getAllUsersInClass(id);
+
+    res.status(200).json(
+      students.map((student) => ({
+        username: student.username,
+        name: student.name,
+        email: student.email,
+        phone: student.phone,
+        dob: formatDate(student.date_of_birth),
+      }))
+    );
+  } catch (error) {
+    console.error("Error getting students:", error);
+    res.status(500).json({ success: false, message: "Error getting students" });
+  }
+});
+
+app.post("/api/classes/createClass", authenticateToken, async (req, res) => {
+  const { className, description, creationDate, startDate, endDate } = req.body;
+
+  try {
+    const newClass = await addNewClass(
+      className,
+      description,
+      creationDate,
+      startDate,
+      endDate
+    );
+
+    console.log("New class added:", newClass);
+    res.status(201).json(newClass);
+  } catch (error) {
+    console.error("Error adding new class:", error);
+    res.status(500).json({ success: false, message: "Error adding new class" });
+  }
+});
+
+app.post(
+  "/api/classes/:id/add-students",
+  authenticateToken,
+  async (req, res) => {
+    const { id } = req.params;
+    const { studentIds } = req.body;
+
+    if (!studentIds || !Array.isArray(studentIds)) {
+      return res.status(400).json({
+        success: false,
+        message: "Please provide an array of student IDs",
+      });
+    }
+
+    try {
+      await addUsersToClass(id, studentIds);
+      res
+        .status(201)
+        .json({ success: true, message: "Students added successfully" });
+    } catch (error) {
+      console.error("Error adding students to class:", error);
+      res
+        .status(500)
+        .json({ success: false, message: "Error adding students to class" });
+    }
+  }
+);
+
+app.get("/api/users/:classId", authenticateToken, async (req, res) => {
+  try {
+    const { classId } = req.params;
+    const users = await getAllUsersNotInClass(classId);
+    res.status(200).json(users);
+  } catch (error) {
+    console.error("Error getting all users:", error);
+    res
+      .status(500)
+      .json({ success: false, message: "Error getting all users" });
+  }
+});
 
 app.listen(port, () => {
   console.log(`Server is running on http://localhost:${port}`);

@@ -307,3 +307,25 @@ button:disabled {
   padding: 0;
   margin: 0;
 }
+
+#class-details td,
+#students-details td {
+  padding: 10px;
+}
+
+#classesList li a {
+  text-decoration: none;
+}
+
+#addStudentsForm {
+  display: flex;
+  flex-direction: column;
+}
+
+#addStudentsForm select {
+  padding: 10px;
+  border-radius: 4px;
+  border: 1px solid #ccc;
+  margin: 20px 0;
+  height: 150px;
+}

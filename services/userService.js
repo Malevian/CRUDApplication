@@ -230,10 +230,10 @@ async function login(username, password) {
       secretKey,
       { expiresIn: "10m" }
     );
-    console.log(token);
+    //console.log(token);
 
-    const decoded = jwt.decode(token);
-    console.log(decoded);
+    // const decoded = jwt.decode(token);
+    // console.log(decoded);
 
     user.last_login = new Date();
     await user.save();

@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="/style.css" />
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css"
+    />
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <title>Classes List</title>
+  </head>
+  <body>
+    <header>
+      <h1>List of Classes</h1>
+      <button onclick="window.location.href='/'">Back</button>
+      <div id="authStatus">
+        <span id="welcomeMessage"></span>
+        <button id="logoutButton">Logout</button>
+        <button
+          id="themeToggleButton"
+          style="margin-left: 10px"
+          onclick="toggleTheme()"
+        >
+          Toggle Theme
+        </button>
+      </div>
+    </header>
+
+    <div id="classesContainer">
+      <button id="addClassButton" style="margin-top: 20px">Add Class</button>
+      <h2>Classes</h2>
+      <ol id="classesList">
+        <!-- Classes will be dynamically added here -->
+      </ol>
+    </div>
+
+    <div id="classInfoContainer">
+      <h2 id="class-details-title" style="display: none">Class Details</h2>
+      <table id="class-details" border="1" style="display: none">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Class Name</th>
+            <th>Description</th>
+            <th>Creation Date</th>
+            <th>Start Date</th>
+            <th>End Date</th>
+          </tr>
+        </thead>
+        <tbody>
+          <!-- Class details will be dynamically added here -->
+        </tbody>
+      </table>
+    </div>
+
+    <div id="studentsContainer">
+      <h2 id="students-title" style="display: none">Students in Class</h2>
+      <button id="addStudentsButton" style="display: none; margin-bottom: 20px">
+        Add Students
+      </button>
+      <table id="students-details" border="1" style="display: none">
+        <thead>
+          <tr>
+            <th>No</th>
+            <th>Username</th>
+            <th>Name</th>
+            <th>Email</th>
+            <th>Phone</th>
+            <th>Date of Birth</th>
+          </tr>
+        </thead>
+        <tbody>
+          <!-- Students details will be dynamically added here -->
+        </tbody>
+      </table>
+    </div>
+
+    <div id="createClassModal" class="modal" style="display: none">
+      <div class="modal-content">
+        <span class="close" onclick="closeCreateModal()">&times;</span>
+        <h2>Create Class</h2>
+        <form id="createClassForm">
+          <input type="text" id="className" placeholder="Class Name" required />
+          <input
+            type="text"
+            id="description"
+            placeholder="Description (optional)"
+          />
+          <input type="text" id="startDate" placeholder="Start Date" required />
+          <input type="text" id="endDate" placeholder="End Date" required />
+          <button type="submit">Create Class</button>
+        </form>
+      </div>
+    </div>
+
+    <div id="addStudentsModal" class="modal" style="display: none">
+      <div class="modal-content">
+        <span class="close" onclick="closeAddStudentsModal()">&times;</span>
+        <h2>Add Students to Class</h2>
+        <form id="addStudentsForm">
+          <label for="studentSelect">Select Students:</label>
+          <select id="studentSelect" multiple required>
+            <!-- Students will be dynamically added here -->
+          </select>
+          <button type="submit">Add Students</button>
+        </form>
+      </div>
+    </div>
+
+    <script src="/classFunctions.js"></script>
+  </body>
+</html>
